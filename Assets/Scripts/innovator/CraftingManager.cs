@@ -1,45 +1,51 @@
 using UnityEngine;
-using UnityEngine.UI; // For Button and Image
-using System.Collections.Generic; // For List
+using UnityEngine.UI;
+using System.Collections.Generic;
+using System.Linq; // Required for List.SequenceEqual and OrderBy
 
 public class CraftingManager : MonoBehaviour
 {
     [Header("Crafting Slots")]
-    public DropZone inputSlot1; // Reference to the DropZone script on CraftingSlot_Input1
-    public DropZone inputSlot2; // Reference to the DropZone script on CraftingSlot_Input2
-    public Image outputSlot;    // Reference to the Image component of CraftingSlot_Output
+    // --- CHANGED: Use a List for input slots ---
+    public List<DropZone> inputSlots; // Reference to all your CraftingSlot_Prefab instances
+
+    public Image outputSlot;
 
     [Header("Crafting Recipes")]
-    public List<CraftingRecipe> recipes; // List to hold all your ScriptableObject recipes
+    public List<CraftingRecipe> recipes;
 
     [Header("UI References")]
-    public Button craftButton;  // Reference to your CRAFT button
+    public Button craftButton;
 
     private void Start()
     {
         if (craftButton != null)
         {
-            craftButton.onClick.AddListener(AttemptCraft); // Link button click to AttemptCraft method
+            craftButton.onClick.AddListener(AttemptCraft);
         }
         else
         {
             Debug.LogError("Craft Button not assigned in CraftingManager!");
         }
-        // Clear output slot on start
         ClearOutputSlot();
     }
 
-    // Call this method when the Craft button is pressed
     public void AttemptCraft()
     {
         Debug.Log("Attempting craft...");
 
-        // Get the DraggableUIItem components currently in the input slots
-        DraggableUIItem item1 = GetItemInSlot(inputSlot1);
-        DraggableUIItem item2 = GetItemInSlot(inputSlot2);
+        // Get current items in slots
+        List<DraggableUIItem> currentItemsInSlots = new List<DraggableUIItem>();
+        foreach (DropZone slot in inputSlots)
+        {
+            DraggableUIItem item = GetItemInSlot(slot);
+            if (item != null)
+            {
+                currentItemsInSlots.Add(item);
+            }
+        }
 
-        // Basic validation: need at least one item
-        if (item1 == null && item2 == null)
+        if (currentItemsInSlots.Count == 0)
         {
             Debug.LogWarning("No items in crafting slots.");
             ClearOutputSlot();
@@ -49,8 +55,7 @@ public class CraftingManager : MonoBehaviour
         // Iterate through all defined recipes
         foreach (CraftingRecipe recipe in recipes)
         {
-            // Check if the current items match this recipe
-            if (MatchRecipe(item1, item2, recipe))
+            if (MatchRecipe(currentItemsInSlots, recipe))
             {
                 Debug.Log("Recipe Matched: " + recipe.name);
                 CraftItem(recipe.outputPrefab);
@@ -59,9 +64,9 @@ public class CraftingManager : MonoBehaviour
             }
         }
 
-        // If we reached here, no recipe matched
+        // No recipe matched
         Debug.Log("No matching recipe found for these items.");
-        ClearOutputSlot(); // Ensure output is empty if no match
+        ClearOutputSlot();
     }
 
     // Helper to get the DraggableUIItem from a DropZone's child
@@ -74,70 +79,59 @@ public class CraftingManager : MonoBehaviour
         return null;
     }
 
-    // Checks if the items in the slots match a given recipe
-    private bool MatchRecipe(DraggableUIItem i1, DraggableUIItem i2, CraftingRecipe recipe)
+    // --- CHANGED: MatchRecipe now compares Lists ---
+    private bool MatchRecipe(List<DraggableUIItem> currentItems, CraftingRecipe recipe)
     {
-        // This logic assumes order doesn't matter for 2-item recipes
-        // It also handles recipes with only one input (input2Type == None)
-
-        bool match1A = (i1 != null && i1.itemType == recipe.input1Type);
-        bool match1B = (i2 != null && i2.itemType == recipe.input1Type);
-
-        bool match2A = (i1 != null && i1.itemType == recipe.input2Type);
-        bool match2B = (i2 != null && i2.itemType == recipe.input2Type);
-
-        // Case 1: Both inputs of recipe are required and present in some order
-        if (recipe.input1Type != RecycleItemType.None && recipe.input2Type != RecycleItemType.None)
-        {
-            return (match1A && match2B) || (match1B && match2A);
-        }
-        // Case 2: Only input1 of recipe is required (input2Type is None)
-        else if (recipe.input1Type != RecycleItemType.None && recipe.input2Type == RecycleItemType.None)
-        {
-            // Need exactly one item in the slots that matches input1Type
-            return (match1A && i2 == null) || (match1B && i1 == null);
-        }
-        // Case 3: No inputs defined for recipe (error or special case)
-        else
+        // First, check if the number of items matches
+        if (currentItems.Count != recipe.requiredInputs.Count)
         {
             return false;
         }
+
+        // Get the item types currently in slots
+        List<RecycleItemType> currentItemTypes = currentItems.Select(item => item.itemType).ToList();
+
+        // Sort both lists to make comparison order-agnostic
+        currentItemTypes.Sort();
+        List<RecycleItemType> requiredTypesSorted = recipe.requiredInputs.OrderBy(type => type).ToList();
+
+        // Compare the sorted lists
+        return currentItemTypes.SequenceEqual(requiredTypesSorted);
     }
 
-
-    // Instantiates the crafted item prefab into the output slot
     private void CraftItem(GameObject outputPrefab)
     {
-        // Clear any existing item in the output slot first
         ClearOutputSlot();
-
         GameObject craftedItem = Instantiate(outputPrefab, outputSlot.transform);
-        craftedItem.name = outputPrefab.name; // Keep prefab name for clarity
-        // The DraggableUIItem's SnapToParent method handles RectTransform.zero for layout group parents
-        craftedItem.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
+        craftedItem.name = outputPrefab.name;
+        craftedItem.GetComponent<RectTransform>().anchoredPosition = Vector2.zero; // Center it in output slot
+        // If the crafted item is draggable, ensure it can be dragged out
+        DraggableUIItem draggableOutput = craftedItem.GetComponent<DraggableUIItem>();
+        if (draggableOutput != null)
+        {
+            draggableOutput.originalParent = outputSlot.transform; // Set its original parent to output slot
+        }
     }
 
-    // Clears items from the input slots
+    // --- CHANGED: ClearInputSlots now iterates through the list ---
     private void ClearInputSlots()
     {
-        if (inputSlot1.transform.childCount > 0)
+        foreach (DropZone slot in inputSlots)
         {
-            Destroy(inputSlot1.transform.GetChild(0).gameObject);
-        }
-        if (inputSlot2.transform.childCount > 0)
-        {
-            Destroy(inputSlot2.transform.GetChild(0).gameObject);
+            if (slot.transform.childCount > 0)
+            {
+                Destroy(slot.transform.GetChild(0).gameObject);
+            }
         }
     }
 
-    // Clears the output slot
     private void ClearOutputSlot()
     {
         if (outputSlot.transform.childCount > 0)
         {
             Destroy(outputSlot.transform.GetChild(0).gameObject);
         }
-        outputSlot.sprite = null; // Clear the image
+        outputSlot.sprite = null;
         outputSlot.color = new Color(outputSlot.color.r, outputSlot.color.g, outputSlot.color.b, 0f); // Make output slot transparent if empty
     }
 }

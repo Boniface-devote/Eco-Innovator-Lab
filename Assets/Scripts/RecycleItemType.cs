@@ -2,9 +2,19 @@
 public enum RecycleItemType
 {
     None,      // Default or unassigned type
-    Plastic,
+    Plastic_bottle,
+    Plastic_bag,
+    Glass_Bottles,
     Paper,
     Glass,
     Metal,
-    Organic // Example for compostables
+    Organic, // Example for compostables
+    glue,
+    rope,
+    soil,
+    rocks,
+    scissors,
+    tyres,
+    straws,
+    sticks
 }

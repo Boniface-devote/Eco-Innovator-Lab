@@ -12,6 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b996de54b2960dc4c997e3062e80adf5, type: 3}
   m_Name: Recipe_WaterFilter
   m_EditorClassIdentifier: 
-  input1Type: 1
-  input2Type: 2
+  requiredInputs: 010000000b0000000a00000004000000
   outputPrefab: {fileID: 5754667660916081967, guid: 8bb7b064dacf0fd4d97d98ba9aba2e08, type: 3}

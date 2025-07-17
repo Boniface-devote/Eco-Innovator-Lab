@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 69acd64b50aa0584a8ad34f32f304a56
+guid: 4124324dd96ab5242a63739e6f899ac6
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 6038147450291530998
-    second: basic water filter_0
+      213: 57896472352631495
+    second: Screenshot 2025-07-15 120113_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,13 +126,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: basic water filter_0
+      name: Screenshot 2025-07-15 120113_0
       rect:
         serializedVersion: 2
-        x: 4
-        y: 2
-        width: 323
-        height: 682
+        x: 0
+        y: 0
+        width: 441
+        height: 802
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +141,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 6fcae045d1fcbc350800000000000000
-      internalID: 6038147450291530998
+      spriteID: 7caa35ce880bdc000800000000000000
+      internalID: 57896472352631495
       vertices: []
       indices: 
       edges: []
@@ -161,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      basic water filter_0: 6038147450291530998
+      Screenshot 2025-07-15 120113_0: 57896472352631495
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

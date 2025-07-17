@@ -1,0 +1,16 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b996de54b2960dc4c997e3062e80adf5, type: 3}
+  m_Name: tyre chair
+  m_EditorClassIdentifier: 
+  requiredInputs: 0d000000090000000f000000
+  outputPrefab: {fileID: 5754667660916081967, guid: a1af44b660923944f805e8cee2b86f49, type: 3}

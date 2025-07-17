@@ -12,6 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b996de54b2960dc4c997e3062e80adf5, type: 3}
   m_Name: Recipe_SolarCooker
   m_EditorClassIdentifier: 
-  input1Type: 4
-  input2Type: 2
+  requiredInputs: 040000000600000002000000
   outputPrefab: {fileID: 5754667660916081967, guid: 1521a296a5a7ca9458b57a2cf66a748f, type: 3}
