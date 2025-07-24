@@ -3,12 +3,12 @@ using UnityEngine.SceneManagement;
 
 
 
-public class instruction : MonoBehaviour
+public class innovatormenu : MonoBehaviour
 {
     // Called when the "Start" button is clicked
 
-    public GameObject instruction1;
-    public GameObject instruction2;
+    public GameObject menu;
+    public GameObject instruccraft_selector;
     public void Back()
     {
         // Replace "GameScene" with the actual name of your main game scene
@@ -16,9 +16,9 @@ public class instruction : MonoBehaviour
     }
     public void next()
     {
-        instruction1.SetActive(false);
-        instruction2.SetActive(true);
+        menu.SetActive(false);
+        instruccraft_selector.SetActive(true);
     }
 
-    
+
 }

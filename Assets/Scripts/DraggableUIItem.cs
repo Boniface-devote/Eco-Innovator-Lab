@@ -83,6 +83,7 @@ public class DraggableUIItem : MonoBehaviour, IBeginDragHandler, IDragHandler, I
                 {
                     wasDroppedOnValidCraftingSlot = true;
                     Debug.Log($"Item {gameObject.name} (from Inventory) dropped on valid Crafting Input Slot: {dropZone.name}");
+                    SoundManager.Instance.PlaySuccess();
                 }
                 else
                 {
@@ -93,7 +94,8 @@ public class DraggableUIItem : MonoBehaviour, IBeginDragHandler, IDragHandler, I
             else // Item originated from somewhere else (e.g., a crafting slot, or not inventory)
             {
                  Debug.Log($"Item {gameObject.name} (from {originalParent.name}) dropped on {dropZone.name}. Let DropZone handle.");
-                }
+                SoundManager.Instance.PlaySuccess();
+            }
         }
  if (originatedFromInventory && !wasDroppedOnValidCraftingSlot)
         {
@@ -149,6 +151,7 @@ public class DraggableUIItem : MonoBehaviour, IBeginDragHandler, IDragHandler, I
             {
                 Debug.Log("Returning " + gameObject.name + " to Inventory.");
                 SnapToParent(inventoryPanelTransform); // Use our existing SnapToParent method
+                SoundManager.Instance.PlayGameOver();
             }
             else
             {

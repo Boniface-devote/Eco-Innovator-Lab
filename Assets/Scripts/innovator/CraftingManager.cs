@@ -60,12 +60,14 @@ public class CraftingManager : MonoBehaviour
                 Debug.Log("Recipe Matched: " + recipe.name);
                 CraftItem(recipe.outputPrefab);
                 ClearInputSlots();
+                SoundManager.Instance.PlaySuccess();
                 return; // Recipe found and crafted, exit
             }
         }
 
         // No recipe matched
         Debug.Log("No matching recipe found for these items.");
+        SoundManager.Instance.PlayWrong();
         ClearOutputSlot();
     }
 

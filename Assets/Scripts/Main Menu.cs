@@ -9,12 +9,36 @@ public class MainMenu : MonoBehaviour
         // Replace "GameScene" with the actual name of your main game scene
         SceneManager.LoadScene("innovator");
     }
+    // Called when the "Start" button is clicked
 
-    // Called when the "Instructions" button is clicked
-    public void LoadInstructions()
+    public GameObject menuPanel;
+    public GameObject instruction1;
+    public GameObject instruction2;
+
+    public void Back()
     {
-        // Replace "InstructionsScene" with the actual name of your instructions scene
-        SceneManager.LoadScene("instructions");
+        // Replace "GameScene" with the actual name of your main game scene
+        SceneManager.LoadScene("Main");
+    }
+    public void CraftGuideBook()
+    {
+        // Replace "GameScene" with the actual name of your main game scene
+        SceneManager.LoadScene("Guidebook");
+    }
+    public void instructions()
+    {
+        instruction1.SetActive(true);
+        menuPanel.SetActive(false);
+        instruction2.SetActive(false);
+
+    }
+
+    public void next()
+    {
+        instruction1.SetActive(false);
+        menuPanel.SetActive(false);
+        instruction2.SetActive(true);
+
     }
 
     // Called when the "Exit" button is clicked

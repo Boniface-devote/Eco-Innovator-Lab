@@ -50,6 +50,7 @@ public class DropZone : MonoBehaviour, IDropHandler
                     if (existingItem != null)
                     {
                         Debug.Log($"Crafting slot {name} already contains {existingItem.gameObject.name}. Swapping it out.");
+                        SoundManager.Instance.PlayGameOver();
 
                         // Find the InventoryPanel's transform to send the existing item back to.
                         // We need to ensure we have this reference.
