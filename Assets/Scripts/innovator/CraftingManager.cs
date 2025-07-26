@@ -1,14 +1,14 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq; // Required for List.SequenceEqual and OrderBy
+using UnityEngine.Events; // Required for UnityEvent
 
 public class CraftingManager : MonoBehaviour
 {
     [Header("Crafting Slots")]
-    // --- CHANGED: Use a List for input slots ---
     public List<DropZone> inputSlots; // Reference to all your CraftingSlot_Prefab instances
-
     public Image outputSlot;
 
     [Header("Crafting Recipes")]
@@ -16,6 +16,11 @@ public class CraftingManager : MonoBehaviour
 
     [Header("UI References")]
     public Button craftButton;
+
+    // --- Game Managers ---
+    [Header("Game Managers")]
+    public QuestManager questManager;
+    public InventoryManager inventoryManager;
 
     private void Start()
     {
@@ -28,13 +33,22 @@ public class CraftingManager : MonoBehaviour
             Debug.LogError("Craft Button not assigned in CraftingManager!");
         }
         ClearOutputSlot();
+
+        if (questManager == null)
+        {
+            Debug.LogError("QuestManager is not assigned in CraftingManager!", this);
+        }
+
+        if (inventoryManager == null)
+        {
+            Debug.LogError("InventoryManager is not assigned in CraftingManager!", this);
+        }
     }
 
     public void AttemptCraft()
     {
         Debug.Log("Attempting craft...");
 
-        // Get current items in slots
         List<DraggableUIItem> currentItemsInSlots = new List<DraggableUIItem>();
         foreach (DropZone slot in inputSlots)
         {
@@ -52,7 +66,6 @@ public class CraftingManager : MonoBehaviour
             return;
         }
 
-        // Iterate through all defined recipes
         foreach (CraftingRecipe recipe in recipes)
         {
             if (MatchRecipe(currentItemsInSlots, recipe))
@@ -60,18 +73,14 @@ public class CraftingManager : MonoBehaviour
                 Debug.Log("Recipe Matched: " + recipe.name);
                 CraftItem(recipe.outputPrefab);
                 ClearInputSlots();
-                SoundManager.Instance.PlaySuccess();
-                return; // Recipe found and crafted, exit
+                return;
             }
         }
 
-        // No recipe matched
         Debug.Log("No matching recipe found for these items.");
-        SoundManager.Instance.PlayWrong();
         ClearOutputSlot();
     }
 
-    // Helper to get the DraggableUIItem from a DropZone's child
     private DraggableUIItem GetItemInSlot(DropZone slot)
     {
         if (slot.transform.childCount > 0)
@@ -81,41 +90,59 @@ public class CraftingManager : MonoBehaviour
         return null;
     }
 
-    // --- CHANGED: MatchRecipe now compares Lists ---
     private bool MatchRecipe(List<DraggableUIItem> currentItems, CraftingRecipe recipe)
     {
-        // First, check if the number of items matches
         if (currentItems.Count != recipe.requiredInputs.Count)
-        {
             return false;
-        }
 
-        // Get the item types currently in slots
         List<RecycleItemType> currentItemTypes = currentItems.Select(item => item.itemType).ToList();
-
-        // Sort both lists to make comparison order-agnostic
         currentItemTypes.Sort();
         List<RecycleItemType> requiredTypesSorted = recipe.requiredInputs.OrderBy(type => type).ToList();
 
-        // Compare the sorted lists
         return currentItemTypes.SequenceEqual(requiredTypesSorted);
     }
 
     private void CraftItem(GameObject outputPrefab)
     {
         ClearOutputSlot();
+
         GameObject craftedItem = Instantiate(outputPrefab, outputSlot.transform);
         craftedItem.name = outputPrefab.name;
-        craftedItem.GetComponent<RectTransform>().anchoredPosition = Vector2.zero; // Center it in output slot
-        // If the crafted item is draggable, ensure it can be dragged out
+        craftedItem.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
+
         DraggableUIItem draggableOutput = craftedItem.GetComponent<DraggableUIItem>();
         if (draggableOutput != null)
         {
-            draggableOutput.originalParent = outputSlot.transform; // Set its original parent to output slot
+            draggableOutput.originalParent = outputSlot.transform;
+        }
+
+        // Notify QuestManager after successful craft
+        if (questManager != null)
+        {
+            questManager.OnItemCrafted(outputPrefab);
+        }
+
+        // Refresh Inventory
+        if (inventoryManager != null)
+        {
+            inventoryManager.RefreshInventory();
+        }
+
+        // Remove crafted item after 5 seconds
+        StartCoroutine(RemoveCraftedItemAfterSeconds(craftedItem, 5f));
+    }
+
+    private IEnumerator RemoveCraftedItemAfterSeconds(GameObject item, float seconds)
+    {
+        yield return new WaitForSeconds(seconds);
+
+        if (item != null)
+        {
+            Destroy(item);
+            ClearOutputSlot();
         }
     }
 
-    // --- CHANGED: ClearInputSlots now iterates through the list ---
     private void ClearInputSlots()
     {
         foreach (DropZone slot in inputSlots)
@@ -133,7 +160,8 @@ public class CraftingManager : MonoBehaviour
         {
             Destroy(outputSlot.transform.GetChild(0).gameObject);
         }
+
         outputSlot.sprite = null;
-        outputSlot.color = new Color(outputSlot.color.r, outputSlot.color.g, outputSlot.color.b, 0f); // Make output slot transparent if empty
+        outputSlot.color = new Color(outputSlot.color.r, outputSlot.color.g, outputSlot.color.b, 0f);
     }
 }
