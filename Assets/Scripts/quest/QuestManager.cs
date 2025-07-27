@@ -1,18 +1,20 @@
-using System.Collections.Generic; // For List
-using TMPro; // Required for TextMeshProUGUI
 using UnityEngine;
+using TMPro;
+using System.Collections.Generic;
 
 public class QuestManager : MonoBehaviour
 {
     [Header("UI References")]
-    public TextMeshProUGUI problemStatementText; // Assign your ProblemStatement_Text here
+    public TextMeshProUGUI problemStatementText;
 
     [Header("Quests")]
-    public List<QuestData> quests; // A list of all possible quests
-    private int currentQuestIndex = -1; // To track the current quest
+    public List<QuestData> quests;
+    private int currentQuestIndex = -1;
+    [HideInInspector] public bool allQuestsCompleted = false; // To let ScoreManager know game is over
 
     [Header("Manager References")]
-    public CraftingManager craftingManager; // Reference to your CraftingManager
+    public CraftingManager craftingManager;
+    public ScoreManager scoreManager; // NEW: Reference to ScoreManager
 
     private void Start()
     {
@@ -24,17 +26,17 @@ public class QuestManager : MonoBehaviour
         {
             Debug.LogError("CraftingManager is not assigned in QuestManager!", this);
         }
+        // ... (existing null checks)
+        if (scoreManager == null) Debug.LogError("ScoreManager is not assigned in QuestManager!", this);
 
-        // Start the first quest
         StartNextQuest();
     }
 
-    // Call this method whenever a new item is crafted by the CraftingManager
     public void OnItemCrafted(GameObject craftedItemPrefab)
     {
-        if (currentQuestIndex < 0 || currentQuestIndex >= quests.Count)
+        if (currentQuestIndex < 0 || currentQuestIndex >= quests.Count || allQuestsCompleted)
         {
-            Debug.Log("No active quest to complete.");
+            Debug.Log("No active quest or all quests complete to evaluate craft.");
             return;
         }
 
@@ -42,14 +44,29 @@ public class QuestManager : MonoBehaviour
         if (craftedItemPrefab == currentQuest.requiredInventionPrefab)
         {
             Debug.Log($"Quest Completed! Crafted: {craftedItemPrefab.name}");
-            problemStatementText.text = $"<color=green>Quest Complete!</color>\n<size=75%>You crafted the {craftedItemPrefab.name.Replace("_UI", "")} and solved the problem!</size>";
-            Invoke("ClearText", 10f); // Clear text after 10 seconds
-            Invoke("StartNextQuest", 3f); // Start next quest after 3 seconds
+            problemStatementText.text = $"<color=green>QUEST SOLVED!</color>\n<size=75%>You crafted the {craftedItemPrefab.name.Replace("_UI", "")}!</size>";
+
+            scoreManager.AddScore(true); // Notify ScoreManager of correct craft
+
+            // Delay displaying next quest to allow player to see "Quest Solved" message
+            Invoke("AdvanceToNextQuest", 3f);
         }
         else
         {
             Debug.Log($"Crafted {craftedItemPrefab.name}, but current quest requires {currentQuest.requiredInventionPrefab.name}.");
+            problemStatementText.text = $"<color=red>INCORRECT!</color>\n<size=75%>That wasn't the solution. Try again!</size>";
+
+            scoreManager.AddScore(false); // Notify ScoreManager of incorrect craft
+
+            // Clear "INCORRECT" message after a short delay, but don't advance quest
+            Invoke("ClearProblemStatementText", 2f);
         }
+    }
+
+    private void AdvanceToNextQuest()
+    {
+        ClearProblemStatementText(); // Clear the "QUEST SOLVED" message
+        StartNextQuest(); // Proceed to the next quest
     }
 
     private void StartNextQuest()
@@ -58,19 +75,19 @@ public class QuestManager : MonoBehaviour
         if (currentQuestIndex < quests.Count)
         {
             QuestData nextQuest = quests[currentQuestIndex];
-            problemStatementText.text = $"<color=red>NEW CHALLENGE:</color>\n<size=100%>{nextQuest.problemStatement}</size>";
+            problemStatementText.text = $"<color=yellow>NEW CHALLENGE:</color>\n<size=90%>{nextQuest.problemStatement}</size>";
             Debug.Log($"New Quest Started: {nextQuest.problemStatement}");
-            Invoke("ClearText", 10f); // Clear text after 10 seconds
         }
         else
         {
-            problemStatementText.text = "<color=green>ALL QUESTS COMPLETE!</color>\n<size=75%>You have solved all the problems. Great job!</size>";
+            problemStatementText.text = "<color=green>ALL QUESTS COMPLETE!</color>\n<size=75%>You have solved all the problems. Good job!</size>";
             Debug.Log("All quests completed!");
-            Invoke("ClearText", 10f); // Clear text after 10 seconds
+            allQuestsCompleted = true; // Mark as complete for ScoreManager
+            // The ScoreManager will handle the final game end state (win/lose)
         }
     }
 
-    private void ClearText()
+    private void ClearProblemStatementText()
     {
         problemStatementText.text = "";
     }
